@@ -1,258 +1,393 @@
 # Awesome Conditioned Time Series Generation
+
 [![Awesome Lists](https://srv-cdn.himpfen.io/badges/awesome-lists/awesomelists-flat.svg)]()
-[![Paper Count](https://img.shields.io/badge/Papers-19-blue)]()
-[![Dataset Count](https://img.shields.io/badge/Datasets-31-blue)]()
+[![Paper Count](https://img.shields.io/badge/Papers-blue)]()
+[![Dataset Count](https://img.shields.io/badge/Datasets-blue)]()
 
-> A curated list of resources for conditioned time series generation 
-> focused on probabilistic approaches and real applications.
+> A curated list of resources for conditioned time series generation, organized by **conditioning mechanism** (what signal guides generation) with backbone architecture as secondary metadata on each entry.
 
-## keywords
-- *Conditional TS generation*
-- *Probabilistic TS generation*
-- *TS imputation*
+The conditioning problem is the more fundamental organizing question: the same backbone (e.g. diffusion) appears across nearly every conditioning type. This list makes that structure explicit.
 
+---
 
 ## Contents
 
-- [Methods](#methods)
-  - [GP-Based Models](#gp-based-models)
-  - [Encoder-Decoder Based Models](#encoder-decoder-based-models)
-  - [Diffusion-Based Models](#diffusion-based-models)
-  - [Foundation/Generative Models](#foundationgenerative-models)
+- [Taxonomy](#taxonomy)
+- [1. Observation-Conditioned Generation](#1-observation-conditioned-generation)
+- [2. Physics & Structure-Conditioned Generation](#2-physics--structure-conditioned-generation)
+- [3. Cross-Channel & Correlation-Conditioned Generation](#3-cross-channel--correlation-conditioned-generation)
+- [4. Causal-Conditioned Generation](#4-causal-conditioned-generation)
+- [5. Language & Label-Conditioned Generation](#5-language--label-conditioned-generation)
 - [Applications](#applications)
-  - [Healthcare & Medical](#healthcare--medical)
-  - [Transportation & Traffic](#transportation--traffic)
-  - [Industrial & IoT](#industrial--iot)
-  - [Climate & Weather](#climate--weather)
-  - [Aviation](#aviation)
+- [Related Works & Backbone Baselines](#related-works--backbone-baselines)
 - [Datasets](#datasets)
-- [Evaluation metrics](#evaluation--metrics)
+- [Evaluation Metrics](#evaluation-metrics)
+- [Surveys](#surveys)
 - [Related Awesome Lists](#related-awesome-lists)
 - [License](#license)
 
-## Methods
+---
 
-### GP-Based Models
+## Taxonomy
 
-Methods based on Gaussian Processes for modeling temporal dependencies and uncertainties.
+Papers are organized by **conditioning mechanism** (primary) with **backbone** noted per entry. The two diagrams below show both axes.
+
+### By conditioning mechanism
+
+```mermaid
+flowchart TD
+    ROOT["Conditioned TS generation\n— conditioning mechanism —"]
+
+    ROOT --> OBS["Observation\nimputation · interpolation"]
+    ROOT --> PHY["Physics · structure"]
+    ROOT --> CROSS["Cross-channel\ncorrelation"]
+    ROOT --> CAUS["Causal"]
+    ROOT --> LANG["Language · label"]
+
+    OBS --> OBS1["Random missing\n[1][2][3][4][5][6][9][10] SAITS MTSCI"]
+    OBS --> OBS2["Block / blackout\n[11][14][15][16] WaveStitch"]
+    OBS --> OBS3["Irregular sampling\n[2][3] Kim+"]
+
+    PHY --> PHY1["Dynamical systems\n[7]"]
+    PHY --> PHY2["Traffic physics\n[12][13]"]
+
+    CROSS --> CR1["Inter-channel signals\nCACCD · DS-Diffusion"]
+
+    CAUS --> CA1["Causal graph\nCausal-TS"]
+
+    LANG --> LA1["Natural language\nBRIDGE · Time Weaver"]
+    LANG --> LA2["Labels · metadata\n[18]"]
+
+    OBS:::teal
+    PHY:::teal
+    CROSS:::teal
+    CAUS:::teal
+    LANG:::teal
+    OBS1:::green
+    OBS2:::green
+    OBS3:::green
+    PHY1:::green
+    PHY2:::green
+    CR1:::green
+    CA1:::green
+    LA1:::green
+    LA2:::green
+    ROOT:::purple
+
+    classDef purple fill:#EEEDFE,stroke:#534AB7,color:#3C3489
+    classDef teal   fill:#E1F5EE,stroke:#0F6E56,color:#085041
+    classDef green  fill:#EAF3DE,stroke:#3B6D11,color:#27500A
+```
+
+### By backbone architecture [Jiaqi+] 
+
+Diffusion dominates across all conditioning types. This diagram reflects the backbone distribution of the papers in this list.
+
+```mermaid
+flowchart TD
+    ROOT["Conditioned TS generation\n— backbone —"]
+
+    ROOT --> PRED["Predictive"]
+    ROOT --> GEN["Generative"]
+    ROOT --> FOUND["Foundation"]
+
+    PRED --> GP["GP\n[1] [13] Kim+"]
+    PRED --> CNN["CNN\n—"]
+    PRED --> ATTN["Attention\n[2] [3] [15] SAITS"]
+
+    GEN --> VAE["VAE\n[18]"]
+    GEN --> GAN["GAN\n—"]
+    GEN --> DIFF["Diffusion / Flow\n[4][5][6][8][11][12][14][16]\nMTSCI WaveStitch CACCD +more"]
+
+    FOUND --> PFM["PFM\n[9] [10]"]
+    FOUND --> LLM["LLM\nBRIDGE · Time Weaver"]
+
+    GP:::coral
+    CNN:::coral
+    ATTN:::coral
+    VAE:::amber
+    GAN:::amber
+    DIFF:::amber
+    PFM:::blue
+    LLM:::blue
+    PRED:::teal
+    GEN:::teal
+    FOUND:::teal
+    ROOT:::purple
+
+    classDef purple fill:#EEEDFE,stroke:#534AB7,color:#3C3489
+    classDef teal   fill:#E1F5EE,stroke:#0F6E56,color:#085041
+    classDef coral  fill:#FAECE7,stroke:#993C1D,color:#712B13
+    classDef amber  fill:#FAEEDA,stroke:#854F0B,color:#633806
+    classDef blue   fill:#E6F1FB,stroke:#185FA5,color:#0C447C
+```
+
+---
+
+## 1. Observation-Conditioned Generation
+
+The most studied conditioning type: generating missing or unobserved values conditioned on what is observed. Covers random, block/blackout, and irregular-sampling missingness patterns.
+
+### GP-Based
 
 - **[1] GP-VAE: Deep probabilistic time series imputation.**
-  Fortuin, Vincent, et al. International Conference on Artificial Intelligence and Statistics. PMLR.  
-  2020 | [Paper](https://proceedings.mlr.press/v108/fortuin20a/fortuin20a.pdf) | [Code](https://github.com/ratschlab/GP-VAE)  
+  Fortuin, Vincent, et al. International Conference on Artificial Intelligence and Statistics. PMLR.
+  2020 | [Paper](https://proceedings.mlr.press/v108/fortuin20a/fortuin20a.pdf) | [Code](https://github.com/ratschlab/GP-VAE)
+  - *Backbone*: GP prior + VAE | *Conditioning*: observed values as context | *Missing pattern*: random
 
-- **[1b] Probabilistic imputation for time-series classification with missing data.** 
-  Kim, SeungHyun, Hyunsu Kim, Eunggu Yun, Hwangrae Lee, Jaehun Lee, and Juho Lee.
-  International Conference on Machine Learning, PMLR.  
+- **[Kim+] Probabilistic imputation for time-series classification with missing data.**
+  Kim, SeungHyun, et al. International Conference on Machine Learning. PMLR.
   2023 | [Paper](https://proceedings.mlr.press/v202/kim23m/kim23m.pdf)
+  - *Backbone*: GP | *Conditioning*: observed values + downstream classification signal | *Missing pattern*: random
 
-### Encoder-Decoder Based Models
+### VAE / Encoder-Decoder
 
-Methods using encoder-decoder architectures, including transformers and VAEs.
+- **[2] HetVAE: Heteroscedastic temporal variational autoencoder for irregularly sampled time series.**
+  Shukla, Satya Narayan, and Benjamin Marlin. ICLR.
+  2022 | [Paper](https://openreview.net/pdf?id=Az7opqbQE-3) | [Code](https://github.com/reml-lab/hetvae)
+  - *Backbone*: VAE | *Conditioning*: irregular observation times and values | *Missing pattern*: irregular sampling
 
-- **[2] Heteroscedastic temporal variational autoencoder for irregularly sampled time series.**
-  Shukla, Satya Narayan, and Benjamin Marlin. International Conference on Learning Representations. ICLR.  
-  2022 | [Paper](https://openreview.net/pdf?id=Az7opqbQE-3) | [Code](https://github.com/reml-lab/hetvae)  
+- **[3] Tripletformer: Probabilistic interpolation of irregularly sampled time series.**
+  Yalavarthi, Vijaya Krishna, et al. IEEE International Conference on Big Data. IEEE.
+  2023 | [Paper](https://arxiv.org/pdf/2210.02091) | [Code](https://github.com/yalavarthivk/tripletformer)
+  - *Backbone*: Transformer | *Conditioning*: triplet (time, value, mask) observations | *Missing pattern*: irregular sampling
 
-
-- **[3] Tripletformer for probabilistic interpolation of irregularly sampled time series.**
-  Yalavarthi, Vijaya Krishna, Johannes Burchert, and Lars Schmidt-Thieme. IEEE International Conference on Big Data (BigData). IEEE.  
-  2023 | [Paper](https://arxiv.org/pdf/2210.02091) | [Code](https://github.com/yalavarthivk/tripletformer)  
-
-
-### Diffusion-Based Models
-
-Methods leveraging diffusion models for conditional generation and imputation.
+### Diffusion / Flow-Based
 
 - **[4] CSDI: Conditional score-based diffusion models for probabilistic time series imputation.**
-  Tashiro, Yusuke, Jiaming Song, Yang Song, and Stefano Ermon. Advances in Neural Information Processing Systems 34. NeurIPS.  
+  Tashiro, Yusuke, et al. NeurIPS.
   2021 | [Paper](https://proceedings.neurips.cc/paper_files/paper/2021/file/cfe8504bda37b575c70ee1a8276f3486-Paper.pdf) | [Code](https://github.com/ermongroup/CSDI)
+  - *Backbone*: Diffusion (score-based) | *Conditioning*: observed values via masking | *Missing pattern*: random
 
 - **[5] SSSD: Diffusion-based time series imputation and forecasting with structured state space models.**
-  Lopez Alcaraz, Juan Miguel, and Nils Strodthoff. Transactions on Machine Learning Research.  
+  Lopez Alcaraz, Juan Miguel, and Nils Strodthoff. Transactions on Machine Learning Research.
   2022 | [Paper](https://arxiv.org/abs/2208.09399) | [Code](https://github.com/AI4HealthUOL/SSSD)
+  - *Backbone*: Diffusion + S4 | *Conditioning*: observed values | *Missing pattern*: random
 
 - **[6] SSD-TS: Exploring the potential of linear state space models for diffusion models in time series imputation.**
-  Gao, Hongfan, et al. Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining.  
+  Gao, Hongfan, et al. ACM SIGKDD.
   2025 | [Paper](https://arxiv.org/abs/2410.13338) | [Code](https://github.com/decisionintelligence/SSD-TS)
-### Foundation/Generative Models
-
-Foundation models, flow-based models, and other generative approaches.
-
-- **[7] Reconstructing dynamics from sparse observations with no training on target system.**
-  Zhai, Z. M., Huang, J. Y., Stern, B. D., & Lai, Y. C. Nature Communications 16.1.  
-  2024 | [Paper](https://www.nature.com/articles/s41467-025-63019-8) | [Code](https://github.com/Zheng-Meng/Dynamics-Reconstruction-ML)  
+  - *Backbone*: Diffusion + linear SSM | *Conditioning*: observed values | *Missing pattern*: random
 
 - **[8] FM-TS (FlowTS): Flow matching for time series generation.**
-  Hu, Y., Wang, X., Wu, L., Zhang, H., Li, S. Z., Wang, S., & Chen, T.  
-  2024 | [Paper](https://arxiv.org/abs/2411.07506) | [Code](https://github.com/UNITES-Lab/FlowTS)  
+  Hu, Y., et al.
+  2024 | [Paper](https://arxiv.org/abs/2411.07506) | [Code](https://github.com/UNITES-Lab/FlowTS)
+  - *Backbone*: Flow matching | *Conditioning*: observed values | *Missing pattern*: random / unconditional
+
+- **MTSCI: A conditional diffusion model for multivariate time series consistent imputation.**
+  Wang, Xin, et al.
+  2023 | [Paper](https://arxiv.org/pdf/2408.05740)
+  - *Backbone*: Diffusion | *Conditioning*: observed values with inter-variable consistency constraints | *Missing pattern*: random
+
+- **WaveStitch: Flexible and fast conditional time series generation with diffusion models.**
+  2025 | [Paper](https://dl.acm.org/doi/pdf/10.1145/3769842)
+  - *Backbone*: Diffusion | *Conditioning*: partial observations | *Missing pattern*: block / random
+
+- **Schrödinger bridge: Provably convergent Schrödinger bridge with applications to probabilistic time series imputation.**
+  Chen, Yuguang, et al. ICML.
+  2023 | [Paper](https://arxiv.org/pdf/2305.07247)
+  - *Backbone*: Schrödinger bridge (diffusion-adjacent) | *Conditioning*: observed endpoints | *Missing pattern*: random
+
+### Attention / Foundation-Based
+
+- **SAITS: Self-attention-based imputation for time series.**
+  Du, Wenjie, David Cote, and Yan Liu. Expert Systems with Applications.
+  2023 | [Paper](https://arxiv.org/abs/2202.08516) | [Code](https://github.com/WenjieDu/SAITS)
+  - *Backbone*: Transformer (diagonally masked attention) | *Conditioning*: observed values | *Missing pattern*: random
 
 - **[9] NuwaTS: A foundation model mending every incomplete time series.**
-  Cheng, Jinguo, et al. arXiv preprint arXiv:2405.15317.  
-  2024 | [Paper](https://arxiv.org/abs/2405.15317) | [Code](https://github.com/Chengyui/NuwaTS)  
+  Cheng, Jinguo, et al. arXiv.
+  2024 | [Paper](https://arxiv.org/abs/2405.15317) | [Code](https://github.com/Chengyui/NuwaTS)
+  - *Backbone*: Foundation model (GPT-style) | *Conditioning*: observed patches | *Missing pattern*: random / block
 
 - **[10] Are time-indexed foundation models the future of time series imputation?**
-  Le Naour, Etienne, et al. arXiv preprint arXiv:2511.05980.  
-  2024 | [Paper](https://arxiv.org/abs/2511.05980)  
+  Le Naour, Etienne, et al. arXiv.
+  2024 | [Paper](https://arxiv.org/abs/2511.05980)
+  - *Backbone*: Time-indexed foundation model | *Conditioning*: observed values | *Missing pattern*: random
+
+- **ST-MVL: Filling missing values in geo-sensory time series data.**
+  Yi, Xiuwen, et al. IJCAI.
+  2016 | [Paper](https://www.ijcai.org/Proceedings/16/Papers/384.pdf)
+  - *Backbone*: Spatial-temporal multi-view learning | *Conditioning*: spatial neighbors + temporal context | *Missing pattern*: spatial / random
+
+---
+
+## 2. Physics & Structure-Conditioned Generation
+
+Generation conditioned on physical laws, dynamical system equations, or structural domain constraints — beyond observed values alone.
+
+- **[7] Reconstructing dynamics from sparse observations with no training on target system.**
+  Zhai, Z. M., et al. Nature Communications.
+  2024 | [Paper](https://arxiv.org/pdf/2410.21222) | [Code](https://github.com/Zheng-Meng/Dynamics-Reconstruction-ML)
+  - *Backbone*: ML-based dynamics reconstruction | *Conditioning*: sparse observations + dynamical system structure
+
+- **[12] PMA-Diffusion: A physics-guided mask-aware diffusion framework for traffic state estimation.**
+  Liu, Lindong, et al. arXiv.
+  2025 | [Paper](https://arxiv.org/abs/2512.06183)
+  - *Backbone*: Diffusion (UNet) | *Conditioning*: physics constraints + sparse loop detector / probe vehicle data
+
+- **[13] Traffic state estimation from vehicle trajectories with anisotropic Gaussian processes.**
+  Wu, F., et al. Transportation Research Part C.
+  2024 | [Paper](https://www.sciencedirect.com/science/article/pii/S0968090X24001670) | [Code](https://github.com/Lucky-Fan/GP_TSE)
+  - *Backbone*: GP | *Conditioning*: sparse vehicle trajectories + anisotropic spatial structure
+
+---
+
+## 3. Cross-Channel & Correlation-Conditioned Generation
+
+Generation that explicitly conditions on inter-channel dependencies or distributional style of a reference dataset.
+
+- **CACCD: Channel-aware contrastive conditional diffusion for multivariate probabilistic time series forecasting.**
+  2024 | [Paper](https://arxiv.org/pdf/2410.02168)
+  - *Backbone*: Diffusion | *Conditioning*: cross-channel contrastive signals
+
+- **DS-Diffusion: Data style-guided diffusion model for time-series generation.**
+  2025 | [Paper](https://arxiv.org/pdf/2509.18584)
+  - *Backbone*: Diffusion | *Conditioning*: style / distribution of a reference dataset
+
+---
+
+## 4. Causal-Conditioned Generation
+
+Generation conditioned on or constrained to respect a causal graph structure between variables.
+
+- **Causal-TS: Causal time series generation via diffusion models.**
+  2025 | [Paper](https://arxiv.org/pdf/2509.20846)
+  - *Backbone*: Diffusion | *Conditioning*: causal graph structure over variables
+
+---
+
+## 5. Language & Label-Conditioned Generation
+
+Generation guided by natural language descriptions, class labels, metadata, or demographic signals.
+
+- **BRIDGE: Bootstrapping text to control time-series generation via multi-agent iterative optimization and diffusion modeling.**
+  Chen, Yiyuan, et al. arXiv.
+  2024 | [Paper](https://arxiv.org/pdf/2503.02445)
+  - *Backbone*: Diffusion | *Conditioning*: natural language descriptions
+
+- **Time Weaver: A conditional time series generation model.**
+  2025 | [Paper](https://arxiv.org/pdf/2403.02682)
+  - *Backbone*: Diffusion | *Conditioning*: multi-type (text, metadata, demographics)
+
+---
 
 ## Applications
 
-Real-world applications of conditioned time series generation across various domains.
+Domain-specific applications. Papers here also appear in a Methods section above; entries here focus on the applied problem and task.
 
 ### Healthcare & Medical
 
 - **[11] MED-Diffusion: Diffusion model-based imputation of multimodal sensor data for surgical patients.**
-  Cheng, Z., Zhang, B., Hu, Y., Du, Y., Liu, T., Zhang, Z., ... & Cui, Z. Sensors.  
+  Cheng, Z., et al. Sensors.
   2025 | [Paper](https://www.mdpi.com/1424-8220/25/19/6175)
-  - *Method*: diffusion (Unet backbone) + tokenization
-  - *Application*: Surgical patient monitoring with multimodal sensors
+  - *Backbone*: Diffusion (UNet) + tokenization | *Conditioning*: observation (random + block missing)
+  - *Task*: Surgical patient monitoring with multimodal sensors
 
 ### Transportation & Traffic
 
-- **[12] PMA-Diffusion: A physics-guided mask-aware diffusion framework for traffic state estimation from sparse observations.**
-  Liu, Lindong, et al. arXiv preprint arXiv:2512.06183.  
+- **[12] PMA-Diffusion: Physics-guided mask-aware diffusion for traffic state estimation.**
+  Liu, Lindong, et al. arXiv.
   2025 | [Paper](https://arxiv.org/abs/2512.06183)
-
-  - *Method*: Diffusion (UNet backbone) + constrained posterior sampling
-  - *Application*: Highway traffic state estimation from sparse loop detector and probe vehicle data.
+  - *Backbone*: Diffusion | *Conditioning*: physics + sparse observations
+  - *Task*: Highway traffic state estimation from sparse loop detectors and probe vehicles
 
 - **[13] Traffic state estimation from vehicle trajectories with anisotropic Gaussian processes.**
-  Wu, F., Cheng, Z., Chen, H., Qiu, Z., & Sun, L. Transportation Research Part C: Emerging Technologies.  
-  2024 | [Paper](https://www.sciencedirect.com/science/article/pii/S0968090X24001670) | [Code](https://github.com/Lucky-Fan/GP_TSE)  
-  - *Method*: Gaussian process regression
-  - *Application*: Reconstruct traffic state from sparse vehicle trajectories
- 
+  Wu, F., et al. Transportation Research Part C.
+  2024 | [Paper](https://www.sciencedirect.com/science/article/pii/S0968090X24001670) | [Code](https://github.com/Lucky-Fan/GP_TSE)
+  - *Backbone*: GP | *Conditioning*: physics + sparse trajectories
+  - *Task*: Reconstruct traffic state from sparse vehicle trajectories
+
 ### Industrial & IoT
 
 - **[14] Lightweight window-portion-based multiple imputation for extreme missing gaps in IoT systems.**
-  Adhikari, D., Jiang, W., Zhan, J., Assefa, M., Khorshidi, H. A., Aickelin, U., & Rawat, D. B. 
-  IEEE Internet of Things Journal.
-  - *Method*: Lightweight Gradient Boosting Machine (LGBM) regression.
-  - *Application*: TS generation for extreme missing gaps (due to faulty sensors, unstable network communications, power failures, device failures, and network attacks) and high missing rates in data from IoT sensors.
-  
+  Adhikari, D., et al. IEEE Internet of Things Journal.
   2024 | [Paper](https://ieeexplore.ieee.org/document/10250789)
+  - *Backbone*: LGBM regression | *Conditioning*: observation (extreme block missing)
+  - *Task*: Recovery from sensor failure, network instability, power loss in IoT data
 
-- **[15] Blackout missing data recovery in industrial time series based on masked former hierarchical imputation framework.**
-  Liu, D., Wang, Y., Liu, C., Wang, K., Yuan, X., & Yang, C. IEEE Transactions on Automation Science and Engineering.  
+- **[15] Blackout missing data recovery in industrial time series.**
+  Liu, D., et al. IEEE Transactions on Automation Science and Engineering.
   2023 | [Paper](https://ieeexplore.ieee.org/abstract/document/10163894)
-  - *Method*: Two-step encoder (conv-based sub-windows coarse, temporal-focused transformer encoding) with a reconstruction head.
-  - *Application*: Industrial time series. Blackout missingness due to hardware failures, communication issues or maintenance downtime. 
+  - *Backbone*: Conv + Transformer encoder | *Conditioning*: observation (blackout / block missing)
+  - *Task*: Industrial TS recovery from hardware failures and maintenance downtime
 
-- **[16] Quality aware industrial data imputation with self-supervised recovery for process soft sensor development.**
-  Dai, Yun, Chao Yang, Kaixin Liu, Yi Liu, and Yuan Yao. Computers & Chemical Engineering.  
-  - *Method*: adds losses to CSDI. CSDI imputes missing values and an LSTM module predicts quality variables from the reconstruction (supervised).
-  - *Application*: Chemical manufacturing - soft sensor development - models to estimate quality variables like purity from available process data like temperature or pressure.
-    
+- **[16] Quality aware industrial data imputation with self-supervised recovery.**
+  Dai, Yun, et al. Computers & Chemical Engineering.
   2025 | [Paper](https://www.sciencedirect.com/science/article/abs/pii/S0098135425003308)
+  - *Backbone*: CSDI + LSTM quality head | *Conditioning*: observation + downstream quality label
+  - *Task*: Soft sensor development in chemical manufacturing
 
 ### Climate & Weather
 
-- **[17] Generative data assimilation of sparse weather station observation at kilometre scales.**
-  *Details to be added*  
-  [Paper](#) | [Code](#)
+- **[17] Generative data assimilation of sparse weather station observations at kilometre scales.**
+  2025 | [Paper](https://arxiv.org/pdf/2406.16947)
+  - *Backbone*: unconditional diffusion + Score-Based Data Assimilation (SDA) (+ Learnt Physics via Multivariate Relationships)| *Conditioning*: Observations (reg adn irreg grid sampling)
+  - *Task*: generate detailed maps of precipitation and surface winds that are consistent with sparse ground-based weather station observations.
 
 ### Aviation
 
 - **[18] Deep generative modelling of aircraft trajectories in terminal manoeuvring areas.**
-  Krauth, Timothé, Adrien Lafage, Jérôme Morio, Xavier Olive, and Manuel Waltert.
-  Machine Learning with Applications.  
-  2023 | [Paper](https://www.sciencedirect.com/science/article/pii/S2666827022001219) | [Code](https://github.com/kruuZHAW/deep-traffic-generation-paper)  
-  - *Method*: VAE + Temporal convolutional networks (backbone) + Variational Mixture of Posteriors (VampPrior)
-  - *Application*: Generate realistic aircraft trajectories in Terminal Manoeuvre Area with few observations available
+  Krauth, Timothé, et al. Machine Learning with Applications.
+  2023 | [Paper](https://www.sciencedirect.com/science/article/pii/S2666827022001219) | [Code](https://github.com/kruuZHAW/deep-traffic-generation-paper)
+  - *Backbone*: VAE + TCN + VampPrior | *Conditioning*: latent / few-shot trajectory prior
+  - *Task*: Realistic trajectory generation in terminal manoeuvre areas with limited data
 
+---
 
+## Related Works & Backbone Baselines
+
+Unconditional or latent-conditioned generative models not directly covered by this list, included as backbone baselines and for comparison.
+
+- **Diffusion-TS: Interpretable diffusion for general time series generation.**
+  Yuan, Yuan, et al. ICLR.
+  2024 | [Paper](https://arxiv.org/abs/2403.01742) | [Code](https://github.com/Y-debug-sys/Diffusion-TS)
+  - *Backbone*: Diffusion | *Note*: unconditional; commonly used as a generation baseline
+
+- **TransFusion: Generating long, high fidelity time series using diffusion models with transformers.**
+  Alcaraz, Juan Miguel Lopez, and Nils Strodthoff. arXiv.
+  2024 | [Paper](https://arxiv.org/abs/2307.12667)
+  - *Backbone*: Diffusion + Transformer | *Note*: unconditional; baseline for long-horizon generation
+
+- **TIMER-XL: Long-context transformers for unified time series forecasting.**
+  Cao, Yong, et al. arXiv.
+  2024 | [Paper](https://arxiv.org/abs/2410.04803)
+  - *Backbone*: Transformer | *Note*: forecasting model; conditioning is implicit (history window)
+
+---
 
 ## Datasets
 
-A survey of datasets in conditioned time series generation research.
+A curated set of datasets spanning healthcare, traffic, energy, climate, finance, and synthetic benchmarks. Entries include dimensions, sequence length, native and experimental missing rates, and which papers use each dataset.
 
-### Dataset Summary Table
+See **[DATASETS.md](DATASETS.md)** for the full dataset reference table.
 
-| Domain | Dataset | Dimensions | Seq Length | Native Missing | Exp. Missing | Used in Papers | Download |
-|--------|---------|------------|------------|----------------|--------------|----------------|----------|
-| **Healthcare** | **PhysioNet 2012** | 35-42 | 48 | ~80% | 10-90% | [1,2,3,4,6,11] | [Link](https://physionet.org/content/challenge-2012/1.0.0/) |
-| **Healthcare** | **PhysioNet 2019** | 40+ | 48-72 | High | 50-90% | [2] | [Link](https://physionet.org/content/challenge-2019/1.0.0/) |
-| **Healthcare** | **MIMIC-III** | Many | Variable | High | Variable | [1b,2,3] | [Link](https://physionet.org/content/mimiciii/1.4/)* |
-| **Healthcare** | **PTB-XL** | 12-lead ECG | 10s | 0% | Variable | [5] | Public ECG |
-| **Healthcare** | **Indicators of Heart Disease** | Multiple | Variable | Varies | Variable | [11] | CDC/Kaggle |
-| **Healthcare** | **Breast Cancer Wisconsin** | 30 features | Variable | Varies | Variable | [11] | UCI/Kaggle |
-| **Healthcare** | **Diabetes Health Indicators** | Multiple | Variable | Varies | Variable | [11] | CDC/Kaggle |
-| **Healthcare** | **COVID-19 Pre-condition** | Multiple | Variable | Varies | Variable | [11] | Public |
-| **Healthcare** | **fMRI** | 50 | Variable | 0% | Variable | [8] | Simulated |
-| **Energy** | **ETTh** | 7 | 48-256 | 0% | 10-90% | [8,9] | [Link](https://github.com/zhouhaoyi/ETDataset) |
-| **Energy** | **ETTm1** | 7 | Variable | 0% | Variable | [5] | [Link](https://github.com/zhouhaoyi/ETDataset) |
-| **Energy** | **Energy** | 28 | 48-256 | 0% | 10-90% | [8] | [Link](https://archive.ics.uci.edu/ml/datasets/Appliances+energy+prediction) |
-| **Energy** | **ECL (Electricity)** | 321 | Hourly | 0% | Variable | [9] | Public |
-| **Energy** | **Solar** | Multiple | 168+24 | 0% | Variable | [5,8] | NREL |
-| **Traffic** | **PEMS-BAY** | 325 sensors | 5-min | Sparse | Variable | [5] | California |
-| **Traffic** | **METR-LA** | 207 sensors | 5-min | Sparse | Variable | [5] | LA traffic |
-| **Traffic** | **I-24 MOTION** | Grid | Spatial-temp | Sparse | 5-20% | [12] | [Link](https://i24motion.org/) |
-| **Traffic** | **CARGO** | Freight | Variable | Sparse | Variable | [14] | Public |
-| **Environment** | **Air Quality** | ~10 | Variable | ~13% | Blackout | [4,6] | [Link](https://dl.acm.org/doi/pdf/10.1145/2783258.2788573) |
-| **Environment** | **AQS Data Sets** | Air quality | Variable | Varies | Variable | [14] | EPA |
-| **Environment** | **Weather** | Multiple | Variable | 0% | Variable | [2,9] | Public |
-| **Environment** | **Climate Records (NOAA)** | Multiple | Daily/Monthly | Varies | Variable | [2] | [Link](https://www.osti.gov/biblio/1394920) |
-| **Activity** | **UCI Human Activity** | 9 | Variable | 0% | Variable | [1b,2] | [Link](https://archive.ics.uci.edu/dataset/196/localization+data+for+person+activity) |
-| **Finance** | **Stocks** | 6 | 24-48 | 0% | 10-90% | [8] | In repos |
-| **Synthetic** | **MuJoCo** | 14 | 100-200 | 0% | 70-90% | [5,6,8] | Simulator |
-| **Synthetic** | **Sines** | 5 | 24-100 | 0% | Variable | [8] | Generated |
-| **Synthetic** | **Chaotic Systems** | Variable | Variable | 0% | 20-100% | [7] | [Link](https://zenodo.org/records/15237226) |
-| **Synthetic** | **Sprites** | Video | Variable | 0% | Variable | [1] | [Link](https://github.com/YingzhenLi/Sprites) |
-| **Benchmark** | **GIFT-Eval** | Multiple | Variable | 0% | Variable | [10] | [Link](https://huggingface.co/spaces/Salesforce/GIFT-Eval) |
-| **Benchmark** | **LOTSA Data** | Multiple | Variable | Varies | Variable | [10] | [Link](https://huggingface.co/datasets/Salesforce/lotsa_data) |
+---
 
-\* *Requires credentialing*  
-**Paper numbers refer to the Methods [1-10, 1b] and Applications [11-18] sections above**
+## Evaluation Metrics
 
-**Domain Summary:** Healthcare (9) | Energy (5) | Traffic (4) | Environment (4) | Activity (1) | Finance (1) | Synthetic (4) | Benchmark (2)
+| Metric | Category | Purpose | Key Papers |
+|---|---|---|---|
+| MSE / MAE / RMSE | Point-wise | Reconstruction accuracy | Most |
+| MRE | Point-wise | Normalized error | [1],[4],[6] |
+| CRPS | Probabilistic | Full predictive distribution quality | [1],[2],[4],[5],[6] |
+| Quantile Loss | Probabilistic | Calibration at specific quantiles | [4],[5],[6] |
+| NLL | Probabilistic | Log-likelihood of ground truth | [1],[2],[4] |
+| Discriminative Score | Generative | Real vs. synthetic classifier (lower = better) | [8],[9] |
+| Predictive Score | Generative | Train-on-synthetic, test-on-real | [8],[9] |
+| Context-FID | Generative | Fréchet distance in feature space | [8] |
+| Correlational Score | Generative | Temporal dependency preservation | [8] |
 
-### Dataset Statistics by Domain
+---
 
-- **Healthcare & Medical**: 9 datasets - High native missingness, clinical time series, patient records
-- **Energy & Electricity**: 5 datasets - Regular sampling, infrastructure monitoring, load forecasting
-- **Traffic & Transportation**: 4 datasets - Spatial-temporal networks, sparse sensor observations
-- **Environment & Climate**: 4 datasets - Weather monitoring, air quality, long-term climate records
-- **Activity & Human Behavior**: 1 dataset - Motion sensor data from daily activities
-- **Finance**: 1 dataset - Stock market time series
-- **Synthetic & Simulation**: 4 datasets - Controlled experiments, physics simulations, known ground truth
-- **Multi-Domain Benchmarks**: 2 datasets - Foundation model evaluation suites
+## Surveys
 
-**Key Characteristics:**
-- **High Native Missingness**: PhysioNet (~80%), MIMIC-III, Air Quality
-- **Extreme Sparsity Testing**: MuJoCo (70-90%), I-24 MOTION (5-20%)
-- **Multi-Modal**: PTB-XL (ECG), fMRI (brain imaging), Sprites (video)
-- **Spatial-Temporal**: PEMS-BAY, METR-LA, I-24 MOTION (sensor networks)
+- [Jiaqi+] **Deep learning for multivariate time series imputation: A survey.**
+  Ma, Jiaqi, et al. arXiv.
+  2024 | [Paper](https://arxiv.org/abs/2402.04059)
 
-### Common Experimental Setups
+---
 
-- **Missing Rates**: 10%, 30%, 50%, 70%, 80%, 90%
-- **Missing Patterns**: Random, blackout, geometric distribution, block missing
-- **Sequence Lengths**: Typically 24-256 time steps in experiments
-- **Evaluation**: MSE, MAE, CRPS, discriminative/predictive scores
-
-For complete details including:
-- Detailed variable descriptions
-- Preprocessing protocols
-- Experimental configurations
-- Conditioning setups
-- Download instructions
-
-**See the comprehensive dataset [TBA] guide.**
-
-## Unclassified Papers
-
-Papers that are relevant to conditioned time series generation but not yet categorized:
-
-- **ST-MVL: Filling Missing Values in Geo-Sensory Time Series Data**
-
-- **Provably Convergent Schrödinger Bridge with Applications to Probabilistic Time Series Imputation**
-
-- **Deep Learning for Multivariate Time Series Imputation: A Survey**
-
-- **MTSCI: A Conditional Diffusion Model for Multivariate Time Series Consistent Imputation**
-
-
-- **SAITS: Self-Attention-based Imputation for Time Series**
- 
 ## Related Awesome Lists
 
 - [Awesome Time Series](https://github.com/cuge1995/awesome-time-series)
@@ -260,6 +395,7 @@ Papers that are relevant to conditioned time series generation but not yet categ
 - [Awesome Diffusion Models](https://github.com/diff-usion/Awesome-Diffusion-Models)
 - [Awesome Gaussian Processes](https://github.com/ebonilla/awesome-gaussian-processes)
 
+---
 
 ## License
 
