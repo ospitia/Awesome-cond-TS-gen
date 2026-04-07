@@ -393,7 +393,6 @@ See **[DATASETS.md](DATASETS.md)** for the full dataset reference table.
 - [Awesome Time Series](https://github.com/cuge1995/awesome-time-series)
 - [Awesome Deep Learning for Time Series](https://github.com/Alro10/deep-learning-time-series)
 - [Awesome Diffusion Models](https://github.com/diff-usion/Awesome-Diffusion-Models)
-- [Awesome Gaussian Processes](https://github.com/ebonilla/awesome-gaussian-processes)
 
 ---
 
