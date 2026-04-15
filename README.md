@@ -378,6 +378,11 @@ See **[DATASETS.md](DATASETS.md)** for the full dataset reference table.
 | Context-FID | Generative | Fréchet distance in feature space | [8] |
 | Correlational Score | Generative | Temporal dependency preservation | [8] |
 
+Relevant literature:
+- [MFDFA] Validation Methods for Energy Time Series Scenarios From Deep Generative Models. Cramer, Eike, et al.
+  2021 | [Paper](https://ieeexplore.ieee.org/iel7/6287639/6514899/09676641.pdf)
+    -  Assess validation methods based on probability density, auto-correlation, and power spectral density and propose using the multifractal detrended fluctuation analysis (MFDFA) as an
+additional validation method for non-trivial features like peaks, bursts, and plateaus
 ---
 
 ## Surveys
@@ -393,6 +398,7 @@ See **[DATASETS.md](DATASETS.md)** for the full dataset reference table.
 - [Awesome Time Series](https://github.com/cuge1995/awesome-time-series)
 - [Awesome Deep Learning for Time Series](https://github.com/Alro10/deep-learning-time-series)
 - [Awesome Diffusion Models](https://github.com/diff-usion/Awesome-Diffusion-Models)
+- [Evaluation-of-Time-Series-Generative-Models](https://github.com/DeepIntoStreams/Evaluation-of-Time-Series-Generative-Models)
 
 ---
 
