@@ -399,6 +399,7 @@ additional validation method for non-trivial features like peaks, bursts, and pl
 - [Awesome Deep Learning for Time Series](https://github.com/Alro10/deep-learning-time-series)
 - [Awesome Diffusion Models](https://github.com/diff-usion/Awesome-Diffusion-Models)
 - [Evaluation-of-Time-Series-Generative-Models](https://github.com/DeepIntoStreams/Evaluation-of-Time-Series-Generative-Models)
+- [Awesome-TimeSeries-SpatioTemporal-Diffusion-Model](https://github.com/yyysjz1997/Awesome-TimeSeries-SpatioTemporal-Diffusion-Model)
 
 ---
 
